@@ -1,8 +1,8 @@
-"""Initial revision
+"""init table
 
-Revision ID: f8aafd162914
+Revision ID: 4a7a22bffb5a
 Revises: 
-Create Date: 2024-10-10 16:55:30.841269
+Create Date: 2024-10-13 14:55:04.745526
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f8aafd162914'
+revision: str = '4a7a22bffb5a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,8 +24,8 @@ def upgrade() -> None:
     sa.Column('first_name', sa.String(), nullable=False),
     sa.Column('last_name', sa.String(), nullable=True),
     sa.Column('age', sa.Integer(), nullable=True),
-    sa.Column('gender', sa.Enum('MALE', 'FEMALE', name='genderenum'), nullable=False),
-    sa.Column('profession', sa.Enum('DEVELOPER', 'DESIGNER', 'MANAGER', 'TEACHER', 'DOCTOR', 'ENGINEER', 'MARKETER', 'WRITER', 'ARTIST', 'LAWYER', 'SCIENTIST', 'NURSE', 'UNEMPLOYED', name='professionenum'), server_default=sa.text("'безработный'"), nullable=False),
+    sa.Column('gender', sa.Enum('MALE', 'FEMALE', name='genderenum', create_type=False), nullable=False),
+    sa.Column('profession', sa.Enum('DEVELOPER', 'DESIGNER', 'MANAGER', 'TEACHER', 'DOCTOR', 'ENGINEER', 'MARKETER', 'WRITER', 'ARTIST', 'LAWYER', 'SCIENTIST', 'NURSE', 'UNEMPLOYED', name='professionenum', create_type=False), server_default=sa.text("'UNEMPLOYED'"), nullable=False),
     sa.Column('interests', sa.ARRAY(sa.String()), nullable=True),
     sa.Column('contacts', sa.JSON(), nullable=True),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -51,7 +51,7 @@ def upgrade() -> None:
     sa.Column('content', sa.Text(), nullable=True),
     sa.Column('main_photo_url', sa.String(), nullable=False),
     sa.Column('photos_url', sa.ARRAY(sa.String()), nullable=True),
-    sa.Column('status', sa.Enum('PUBLISHED', 'DELETED', 'UNDER_MODERATION', 'DRAFT', 'SCHEDULED', name='statuspost'), server_default=sa.text("'черновик'"), nullable=False),
+    sa.Column('status', sa.Enum('PUBLISHED', 'DELETED', 'UNDER_MODERATION', 'DRAFT', 'SCHEDULED', name='statuspost', create_type=False), server_default=sa.text("'DRAFT'"), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -64,7 +64,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('post_id', sa.Integer(), nullable=False),
     sa.Column('is_published', sa.Boolean(), server_default=sa.text("'false'"), nullable=False),
-    sa.Column('rating', sa.Enum('ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', name='ratingenum'), server_default=sa.text('7'), nullable=False),
+    sa.Column('rating', sa.Enum('ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', name='ratingenum', create_type=False), server_default=sa.text("'SEVEN'"), nullable=False),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -82,3 +82,9 @@ def downgrade() -> None:
     op.drop_table('users')
     op.drop_table('profiles')
     # ### end Alembic commands ###
+
+    # Удаление типов ENUM
+    op.execute('DROP TYPE IF EXISTS ratingenum')
+    op.execute('DROP TYPE IF EXISTS genderenum')
+    op.execute('DROP TYPE IF EXISTS professionenum')
+    op.execute('DROP TYPE IF EXISTS statuspost')
