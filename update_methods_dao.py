@@ -1,9 +1,9 @@
 import asyncio
 from pydantic import create_model, EmailStr
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from dao.dao import UserDAO
+from dao.dao import UserDAO, ProfileDAO
 from dao.session_maker import connection
 from models import Profile
 
@@ -52,4 +52,13 @@ async def update_age_mass(session: AsyncSession, new_age: int, last_name: str):
         raise
 
 
-asyncio.run(update_age_mass(new_age=22, last_name='Smith'))
+@connection(commit=True)
+async def update_age_mass_dao(session: AsyncSession, new_age: int, last_name: str):
+    filter_criteria = create_model('FilterModel', last_name=(str, ...))
+    values = create_model('ValuesModel', age=(int, ...))
+    await ProfileDAO.update_many(session=session,
+                                 filter_criteria=filter_criteria(last_name=last_name),
+                                 values=values(age=new_age))
+
+
+asyncio.run(update_age_mass_dao(new_age=33, last_name='Smith'))

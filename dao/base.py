@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar, List
 from pydantic import BaseModel
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,4 +106,31 @@ class BaseDAO(Generic[T]):
             return result.rowcount
         except SQLAlchemyError as e:
             print(f"Error in mass update: {e}")
+            raise
+
+    @classmethod
+    async def delete_one_by_id(cls, data_id: int, session: AsyncSession):
+        # Найти запись по ID
+        try:
+            data = await session.get(cls.model, data_id)
+            if data:
+                await session.delete(data)
+                await session.flush()
+        except SQLAlchemyError as e:
+            print(f"Error occurred: {e}")
+            raise
+
+    @classmethod
+    async def delete_many(cls, session: AsyncSession, filters: BaseModel | None):
+        if filters:
+            filter_dict = filters.model_dump(exclude_unset=True)
+            stmt = delete(cls.model).filter_by(**filter_dict)
+        else:
+            stmt = delete(cls.model)
+        try:
+            result = await session.execute(stmt)
+            await session.flush()
+            return result.rowcount
+        except SQLAlchemyError as e:
+            print(f"Error occurred: {e}")
             raise

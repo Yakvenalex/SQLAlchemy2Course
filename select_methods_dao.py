@@ -1,13 +1,8 @@
 import asyncio
-
 from pydantic import create_model, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from dao.dao import UserDAO
-from asyncio import run
-
 from dao.session_maker import connection
-from models import User
 from schemas import UserPydantic
 
 
