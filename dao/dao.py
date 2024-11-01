@@ -1,16 +1,18 @@
-from typing import List
-
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from dao.base import BaseDAO
 from models import User, Profile, Post, Comment
-from sql_enums import GenderEnum, ProfessionEnum
 
 
-class UserDAO(BaseDAO):
+class UserDAO(BaseDAO[User]):
     model = User
+
+    @classmethod
+    async def update_username_age_by_id(cls, session: AsyncSession, data_id: int, username: str, age: int):
+        user = await session.get(cls.model, data_id)
+        user.username = username
+        user.profile.age = age
+        await session.flush()
 
     @classmethod
     async def add_user_with_profile(cls, session: AsyncSession, user_data: dict) -> User:
@@ -75,13 +77,13 @@ class UserDAO(BaseDAO):
         return records  # Возвращаем список записей
 
 
-class ProfileDAO(BaseDAO):
+class ProfileDAO(BaseDAO[Profile]):
     model = Profile
 
 
-class PostDAO(BaseDAO):
+class PostDAO(BaseDAO[Post]):
     model = Post
 
 
-class CommentDAO(BaseDAO):
+class CommentDAO(BaseDAO[Comment]):
     model = Comment

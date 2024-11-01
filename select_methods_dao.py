@@ -1,8 +1,14 @@
+import asyncio
+
+from pydantic import create_model, EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from dao.dao import UserDAO
-from database import connection
 from asyncio import run
 
-from schemas import UserPydantic, UsernameIdPydantic
+from dao.session_maker import connection
+from models import User
+from schemas import UserPydantic
 
 
 @connection
@@ -23,13 +29,27 @@ async def select_full_user_info(session, user_id):
     return {'message': f'Пользователь с ID {user_id} не найден!'}
 
 
-@connection
-async def select_full_user_info_email(session, user_id, email):
-    rez = await UserDAO.find_one_or_none(session=session, id=user_id, email=email)
-    if rez:
-        return UserPydantic.from_orm(rez).dict()
+@connection(commit=False)
+async def select_full_user_info_email(session: AsyncSession, user_id: int, email: str):
+    FilterModel = create_model(
+        'FilterModel',
+        id=(int, ...),
+        email=(EmailStr, ...)
+    )
+
+    user = await UserDAO.find_one_or_none(session=session, filters=FilterModel(id=user_id, email=email))
+
+    if user:
+        # Преобразуем ORM-модель в Pydantic-модель и затем в словарь
+        return UserPydantic.model_validate(user).model_dump()
+
     return {'message': f'Пользователь с ID {user_id} не найден!'}
 
 
-info = run(select_full_user_info_email(user_id=21, email='bob.smith@example.com'))
-print(info)
+@connection(commit=False)
+async def get_select(session: AsyncSession, user_id: int):
+    user = await UserDAO.find_one_or_none_by_id(session=session, data_id=user_id)
+    print(UserPydantic.model_validate(user).model_dump())
+
+
+asyncio.run(get_select(user_id=21))
